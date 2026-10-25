@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuakeReady</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 18h6l3-9 5 16 4-12 2 5h8' fill='none' stroke='%23c2410c' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28"><path d="M2 18h6l3-9 5 16 4-12 2 5h8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <div>
+        <h1>QuakeReady</h1>
+        <p class="tagline">Find the furniture that could fall on you in the next big Northwest earthquake, and fix it for a few dollars.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Step 1: inputs -->
+    <section class="card" id="setup">
+      <form id="scan-form">
+        <label class="photo-drop" id="photo-drop">
+          <input type="file" id="photo" accept="image/*" capture="environment">
+          <!-- Preview of the chosen photo (hidden until there is one). -->
+          <img id="photo-preview" alt="The photo you chose" hidden>
+          <span id="photo-label"><strong>Take or choose a photo</strong> of a room. Stand in a corner so the whole wall is in view.</span>
+        </label>
+        <div class="samples">Or try a sample:
+          <button type="button" class="link" data-sample="bedroom.jpg">bedroom</button>
+          <button type="button" class="link" data-sample="desk_shelf.jpg">desk</button>
+          <button type="button" class="link" data-sample="living_room.jpg">living room</button>
+        </div>
+
+        <div class="grid">
+          <label>Address or city
+            <input type="text" id="address" placeholder="e.g. 8250 160th Ave NE, Redmond, WA" value="Redmond, WA">
+          </label>
+          <label>Which floor is this room on?
+            <span class="inline">
+              <select id="floor"></select> of <select id="total-floors"></select>
+            </span>
+          </label>
+          <label>Earthquake to prepare for
+            <select id="scenario">
+              <option value="design">Design earthquake (strong)</option>
+              <option value="maximum">Maximum considered (extreme)</option>
+            </select>
+          </label>
+          <label>Type of earthquake
+            <select id="quake-type">
+              <option value="cascadia">Cascadia megaquake (long, rolling)</option>
+              <option value="seattle">Seattle Fault (short, violent)</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" class="primary" id="scan-btn">Scan room</button>
+        <p class="status" id="status" role="status"></p>
+      </form>
+    </section>
+
+    <!-- Step 2: results (hidden until a scan finishes) -->
+    <section id="results" hidden>
+      <div class="result-grid">
+        <div class="card viewer">
+          <div class="canvas-wrap"><canvas id="canvas"></canvas></div>
+          <!-- Seismograph: the simulated quake's ground acceleration over time.
+               During the shake animation a playhead moves across it. -->
+          <div class="seismo-wrap"><canvas id="seismo" width="1000" height="120"></canvas></div>
+          <p class="sim-caption" id="sim-caption"></p>
+          <div class="toolbar">
+            <button class="primary" id="shake-btn">Shake the room</button>
+            <button id="reset-btn">Reset</button>
+            <label class="toggle"><input type="checkbox" id="zones-toggle" checked> Fall zones</label>
+            <button id="print-btn">Print fix plan</button>
+          </div>
+          <p class="legend">
+            <span><span class="dot high"></span>Will tip</span>
+            <span><span class="dot medium"></span>Could tip</span>
+            <span><span class="dot low"></span>Low risk</span>
+            <span><span class="dot secured"></span>Secured</span>
+            <span><span class="dot target"></span>People / exits</span>
+          </p>
+        </div>
+
+        <div class="side">
+          <div class="card score-card">
+            <div class="score" id="score"><span id="score-num">--</span><small>/100</small></div>
+            <div>
+              <h2>Room safety score</h2>
+              <p id="shaking-summary"></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Fix list <span class="muted" id="fix-total"></span></h2>
+            <div class="budget">
+              <label>My budget $
+                <input type="number" id="budget" value="25" min="0" max="2000" step="5">
+              </label>
+              <p id="plan-summary"></p>
+            </div>
+            <ol id="fix-list" class="fix-list"></ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Everything we found</h2>
+        <p class="muted">Sizes are estimated from the photo. If you know the real height or depth, type it in and the physics updates instantly.</p>
+        <div id="items" class="items"></div>
+      </div>
+
+      <details class="card how">
+        <summary>How QuakeReady works</summary>
+        <ol>
+          <li><strong>Detect.</strong> An open-vocabulary YOLO model finds furniture by name, including bookshelves, dressers and water heaters that normal detectors can't.</li>
+          <li><strong>Measure.</strong> A door (almost always 80 in tall) or the typical sizes of everything in view sets the photo's scale.</li>
+          <li><strong>Physics.</strong> A box of depth D and height H starts to tip when the floor accelerates sideways faster than <em>g &times; D / H</em>.</li>
+          <li><strong>Your shaking.</strong> USGS seismic design maps give the peak ground acceleration at your address. Upper floors shake harder (building code factor 1 + 2z/h).</li>
+          <li><strong>Fall zones.</strong> A tipping object lands about one height from its base. If that covers a bed, couch or door, it moves up the list.</li>
+          <li><strong>Rocking simulation.</strong> Starting to tip isn't the same as falling. Each object is rocked through 24 computer-generated earthquakes using Housner's rocking-block equations, and we count how often it actually falls over. The shake animation plays one of those quakes.</li>
+          <li><strong>Budget plan.</strong> A knapsack algorithm picks the set of fixes that raises your score the most for the money you have.</li>
+        </ol>
+      </details>
+    </section>
+  </main>
+
+  <footer>Made for the Congressional App Challenge. Estimates only: when in doubt, strap it.</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

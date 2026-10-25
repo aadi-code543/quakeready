@@ -1,0 +1,12 @@
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+ultralytics>=8.3.100
+opencv-python>=4.9
+numpy>=1.26
+pytest>=8.0
+
+# Ultralytics needs the "clip" package to turn our object names into text
+# embeddings (for YOLOE and YOLO-World). It isn't on PyPI, so we install it from
+# a GitHub zip of a fixed commit. A zip doesn't need Git installed.
+clip @ https://github.com/ultralytics/CLIP/archive/7ffa84b3bfa40c42ecc1c77147a855e69cb2dd40.zip
