@@ -127,6 +127,6 @@ Full APA citations are in [CITATIONS.md](CITATIONS.md).
 ## Credits
 
 * Code walkthrough for readers: [WALKTHROUGH.md](WALKTHROUGH.md).
-* Built with help from Claude, an AI assistant by Anthropic, which helped write and explain the code.
+* Built with help from Claude, an AI assistant by Anthropic.
 * Object detection: Ultralytics YOLOE / YOLO11 (AGPL-3.0) with CLIP / MobileCLIP text encoders. Model weights are downloaded on first run and are not stored in this repository.
 * Seismic data: U.S. Geological Survey (public domain). Geocoding: U.S. Census Bureau and OpenStreetMap contributors (ODbL).
